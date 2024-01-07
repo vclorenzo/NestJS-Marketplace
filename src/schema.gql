@@ -1,0 +1,136 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Cart {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+type Comment {
+  comment: String!
+  id: Int!
+  user: User!
+  userId: Int!
+}
+
+input CreateCommentInput {
+  comment: String!
+  userId: Int!
+}
+
+input CreateOrderInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input CreateProductInput {
+  category: String!
+  description: String!
+  image: String!
+  name: String!
+  price: Float!
+  userId: Int!
+}
+
+input CreateUserInput {
+  email: String!
+  isAdmin: Boolean!
+  password: String!
+}
+
+type LoginResponse {
+  access_token: String!
+  user: User!
+}
+
+input LoginUserInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  createComment(createCommentInput: CreateCommentInput!): Comment!
+  createOrder(createOrderInput: CreateOrderInput!): Order!
+  createProduct(createProductInput: CreateProductInput!): Product!
+  createUser(createUserInput: CreateUserInput!): User!
+  login(loginUserInput: LoginUserInput!): LoginResponse!
+  removeComment(id: Int!): Comment!
+  removeOrder(id: Int!): Order!
+  removeProduct(id: Int!): Product!
+  removeUser(email: String!): User!
+  updateCart(updateCartInput: UpdateCartInput!): Cart!
+  updateComment(comment: UpdateCommentInput!, id: Float!): Comment!
+  updateOrder(updateOrderInput: UpdateOrderInput!): Order!
+  updateProduct(id: Float!, product: UpdateProductInput!): Product!
+  updateUser(email: String!, user: UpdateUserInput!): User!
+}
+
+type Order {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+type Product {
+  category: String!
+  description: String!
+  id: Int!
+  image: String!
+  name: String!
+  price: Float!
+  user: User!
+  userId: Int!
+}
+
+type Query {
+  cart: [Cart!]!
+  comment(id: Int!): Comment!
+  comments: [Comment!]!
+  order(id: Int!): Order!
+  orders: [Order!]!
+  product(id: Int!): Product!
+  products: [Product!]!
+  user(email: String!): User!
+  users: [User!]!
+}
+
+input UpdateCartInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input UpdateCommentInput {
+  comment: String!
+  userId: Int
+}
+
+input UpdateOrderInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input UpdateProductInput {
+  category: String
+  description: String
+  image: String
+  name: String
+  price: Float
+  userId: Int
+}
+
+input UpdateUserInput {
+  email: String
+  isAdmin: Boolean
+  password: String
+}
+
+type User {
+  comments: [Comment!]
+  email: String!
+  id: Int!
+  isAdmin: Boolean!
+  password: String!
+  products: [Product!]
+}
