@@ -1,5 +1,6 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Comment } from 'src/comments/entities/comment.entity';
+import { Order } from 'src/orders/entities/order.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -44,11 +45,11 @@ export class Product {
   @Field((type) => User)
   user: User;
 
-  // @Column()
-  // @Field((type) => Int)
-  // commentId: number;
+  @ManyToOne(() => Order, (order) => order.products)
+  @Field((type) => Order)
+  order: Order;
 
-  // @OneToMany(() => Comment, (comment) => comment.product)
-  // @Field((type) => Comment)
-  // comments?: Comment[];
+  @OneToMany(() => Comment, (comment) => comment.product)
+  @Field((type) => Comment)
+  comments?: Comment[];
 }

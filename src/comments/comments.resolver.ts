@@ -48,10 +48,10 @@ export class CommentsResolver {
     return this.commentsService.remove(id);
   }
 
-  // @ResolveField((returns) => Product)
-  // product(@Parent() comment: Comment): Promise<Product> {
-  //   return this.commentsService.getProduct(comment.productId);
-  // }
+  @ResolveField((returns) => Product)
+  product(@Parent() comment: Comment): Promise<Product> {
+    return this.commentsService.getProduct(comment.productId);
+  }
 
   @ResolveField((returns) => User)
   user(@Parent() comment: Comment): Promise<User> {

@@ -14,7 +14,7 @@ export class CommentsService {
   constructor(
     @InjectRepository(Comment) private commentsRepository: Repository<Comment>,
     private usersService: UsersService,
-    // private productsService: ProductsService,
+    private productsService: ProductsService,
   ) {}
 
   create(createCommentInput: CreateCommentInput) {
@@ -26,9 +26,9 @@ export class CommentsService {
     return this.usersService.findOneID(userId);
   }
 
-  // getProduct(productId: number): Promise<Product> {
-  //   return this.productsService.findOne(productId);
-  // }
+  getProduct(productId: number): Promise<Product> {
+    return this.productsService.findOne(productId);
+  }
 
   findAll(): Promise<Comment[]> {
     return this.commentsRepository.find();

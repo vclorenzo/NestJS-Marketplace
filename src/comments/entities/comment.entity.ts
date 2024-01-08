@@ -24,11 +24,11 @@ export class Comment {
   @Field((type) => User)
   user: User;
 
-  // @Column()
-  // @Field((type) => Int)
-  // productId: number;
+  @Column()
+  @Field((type) => Int)
+  productId: number;
 
-  // @ManyToOne(() => Product, (product) => product.comments)
-  // @Field((type) => Product)
-  // product: Product;
+  @ManyToOne(() => Product, (product) => product.comments)
+  @Field((type) => Product)
+  product: Product;
 }

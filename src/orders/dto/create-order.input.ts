@@ -1,7 +1,13 @@
 import { InputType, Int, Field } from '@nestjs/graphql';
+import { IsInt } from 'class-validator';
 
 @InputType()
 export class CreateOrderInput {
-  @Field(() => Int, { description: 'Example field (placeholder)' })
-  exampleField: number;
+  @IsInt()
+  @Field((type) => Int)
+  userId: number;
+
+  @IsInt()
+  @Field((type) => Int)
+  productId: number;
 }

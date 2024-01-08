@@ -22,7 +22,7 @@ export class ProductsService {
     return this.productsRepository.save(newProduct);
   }
 
-  async findAll(): Promise<Product[]> {
+  findAll(): Promise<Product[]> {
     return this.productsRepository.find();
   }
 
@@ -43,14 +43,6 @@ export class ProductsService {
     }
     return user;
   }
-
-  // async getComment(id: number): Promise<Comment> {
-  //   const comment = await this.commentsService.findOne(id);
-  //   if (!comment) {
-  //     throw new NotFoundException('No comment found');
-  //   }
-  //   return comment;
-  // }
 
   async update(
     id: number,
