@@ -27,6 +27,10 @@ export class Product {
 
   @Column()
   @Field()
+  title: string;
+
+  @Column()
+  @Field()
   image: string;
 
   @Column()

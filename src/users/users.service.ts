@@ -10,6 +10,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
+import { UpdateWalletInput } from './dto/update-wallet.input';
 
 const scrypt = promisify(_scrypt);
 
@@ -74,6 +75,14 @@ export class UsersService {
       throw new NotFoundException('No user found');
     }
 
+    // Check if the password is provided in the update input
+    if (updateUserInput.password) {
+      const salt = randomBytes(8).toString('hex');
+      const hash = (await scrypt(updateUserInput.password, salt, 32)) as Buffer;
+      const result = salt + '.' + hash.toString('hex');
+      updateUserInput.password = result; // Update the password in updateUserInput
+    }
+
     await this.usersRepository.update(userToUpdate.id, updateUserInput);
 
     const updatedUser = await this.usersRepository.findOneOrFail({
@@ -94,5 +103,39 @@ export class UsersService {
 
     await this.usersRepository.remove(userToRemove);
     return userToRemove;
+  }
+
+  async getWalletBalance(
+    email: string,
+  ): Promise<{ walletBalance: number } | null> {
+    const user = await this.usersRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new NotFoundException('No user found');
+    }
+    return { walletBalance: user.walletBalance || 0 };
+  }
+
+  async updateWalletBalance(
+    email: string,
+    updateWalletInput: UpdateWalletInput,
+  ): Promise<{ walletBalance: number } | null> {
+    const userWalletToUpdate = await this.usersRepository.findOne({
+      where: { email },
+    });
+
+    if (!userWalletToUpdate) {
+      throw new NotFoundException('No user found');
+    }
+
+    await this.usersRepository.update(userWalletToUpdate.id, updateWalletInput);
+
+    const updatedWallet = await this.usersRepository.findOneOrFail({
+      where: { id: userWalletToUpdate.id },
+    });
+
+    return updatedWallet;
   }
 }

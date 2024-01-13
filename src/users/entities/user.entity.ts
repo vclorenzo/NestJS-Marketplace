@@ -1,4 +1,5 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
 import { Comment } from 'src/comments/entities/comment.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
@@ -17,6 +18,30 @@ export class User {
   @Column()
   @Field()
   password: string;
+
+  @Column()
+  @Field()
+  firstName: string;
+
+  @Column()
+  @Field()
+  lastName: string;
+
+  @Column()
+  @Field({ nullable: true })
+  about: string;
+
+  @Column({ type: 'date' })
+  @Field()
+  birthDate: Date;
+
+  @Column()
+  @Field()
+  sex: string;
+
+  @Column()
+  @Field()
+  walletBalance: number;
 
   @Column()
   @Field()

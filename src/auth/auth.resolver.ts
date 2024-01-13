@@ -1,17 +1,22 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { LoginResponse } from './dto/login-response';
+import { CreateUserInput } from '../users/dto/create-user.input';
+import { UnauthorizedException, UseGuards } from '@nestjs/common';
+import { LoginResponse } from './dto/login-response'; // Import the LoginResponse DTO
 import { LoginUserInput } from './dto/login-user-input';
-import { UseGuards } from '@nestjs/common';
-import { GQLAuthGuard } from './gql-auth.guard';
 
-@Resolver()
+@Resolver('Auth')
 export class AuthResolver {
   constructor(private authService: AuthService) {}
 
-  @Mutation(() => LoginResponse)
-  @UseGuards(GQLAuthGuard)
-  login(@Args('loginUserInput') loginUserInput: LoginUserInput) {
-    return this.authService.login(loginUserInput);
+  @Mutation((returns) => LoginResponse)
+  async login(@Args('loginUserInput') loginUserInput: LoginUserInput) {
+    const user = await this.authService.login(loginUserInput);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return user;
   }
 }

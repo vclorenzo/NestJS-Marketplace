@@ -30,10 +30,6 @@ export class ProductsResolver {
   user(@Parent() product: Product): Promise<User> {
     return this.productsService.getUser(product.userId);
   }
-  // @ResolveField((returns) => Comment)
-  // comment(@Parent() product: Comment): Promise<Comment> {
-  //   return this.productsService.getComment(product.userId);
-  // }
 
   @Query(() => [Product], { name: 'products' })
   findAll() {
