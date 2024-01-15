@@ -19,10 +19,6 @@ export class Product {
 
   @Column()
   @Field()
-  name: string;
-
-  @Column()
-  @Field()
   price: number;
 
   @Column()
@@ -41,6 +37,10 @@ export class Product {
   @Field()
   category: string;
 
+  @Column({ default: true })
+  @Field()
+  isListed: boolean;
+
   @Column()
   @Field((type) => Int)
   userId: number;
@@ -48,10 +48,6 @@ export class Product {
   @ManyToOne(() => User, (user) => user.products)
   @Field((type) => User)
   user: User;
-
-  @ManyToOne(() => Order, (order) => order.products)
-  @Field((type) => Order)
-  order: Order;
 
   @OneToMany(() => Comment, (comment) => comment.product)
   @Field((type) => Comment)

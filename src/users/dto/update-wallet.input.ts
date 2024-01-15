@@ -15,4 +15,8 @@ export class UpdateWalletInput extends PartialType(CreateUserInput) {
   @IsNumber()
   @Field()
   walletBalance: number;
+
+  @IsNumber()
+  @Field({ nullable: true })
+  totalCredits: number;
 }

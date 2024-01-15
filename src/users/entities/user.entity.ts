@@ -47,6 +47,10 @@ export class User {
   @Field()
   isAdmin: boolean;
 
+  @Column({ default: true })
+  @Field()
+  isActive: boolean;
+
   @OneToMany(() => Product, (product) => product.user)
   @Field((type) => [Product], { nullable: true })
   products?: Product[];

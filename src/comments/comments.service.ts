@@ -30,8 +30,35 @@ export class CommentsService {
     return this.productsService.findOne(productId);
   }
 
-  findAll(): Promise<Comment[]> {
-    return this.commentsRepository.find();
+  async findAll(
+    pageSize: number = 10,
+    page: number = 1,
+  ): Promise<{
+    comments: Comment[];
+    total: number;
+    limit: number;
+    offset: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    const [comments, total] = await this.commentsRepository.findAndCount({
+      skip,
+      take,
+    });
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      comments,
+      total,
+      limit: pageSize,
+      offset: skip,
+      page,
+      totalPages,
+    };
   }
 
   async findOne(id: number): Promise<Comment> {

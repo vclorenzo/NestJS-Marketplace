@@ -5,7 +5,7 @@ import { IsInt, IsNumber, IsString } from 'class-validator';
 export class CreateProductInput {
   @IsString()
   @Field()
-  name: string;
+  title: string;
 
   @IsNumber()
   @Field()

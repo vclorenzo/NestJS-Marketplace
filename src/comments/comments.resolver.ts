@@ -13,6 +13,11 @@ import { CreateCommentInput } from './dto/create-comment.input';
 import { UpdateCommentInput } from './dto/update-comment.input';
 import { User } from 'src/users/entities/user.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { NotFoundError } from 'rxjs';
+import {
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Resolver(() => Comment)
 export class CommentsResolver {
@@ -26,8 +31,21 @@ export class CommentsResolver {
   }
 
   @Query(() => [Comment], { name: 'comments' })
-  findAll() {
-    return this.commentsService.findAll();
+  async getComments(
+    @Args('page') page: number,
+    @Args('pageSize') pageSize: number,
+  ) {
+    try {
+      const result = await this.commentsService.findAll(pageSize, page);
+
+      if (!result.comments || result.comments.length === 0) {
+        throw new NotFoundException('No comments found');
+      }
+
+      return result.comments;
+    } catch (error) {
+      throw new InternalServerErrorException('Internal Server Error');
+    }
   }
 
   @Query(() => Comment, { name: 'comment' })

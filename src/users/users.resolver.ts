@@ -4,8 +4,9 @@ import { User } from './entities/user.entity';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { NotFoundException, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { UpdateWalletInput } from './dto/update-wallet.input';
+import { DeactivateUserInput } from './dto/deactivate-user.input';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -38,19 +39,26 @@ export class UsersResolver {
   }
 
   @Mutation(() => User)
-  @UseGuards(JwtAuthGuard)
-  updateWalletBalance(
+  // @UseGuards(JwtAuthGuard)
+  purchase(
     @Args('email', { type: () => String }) email: string,
-    @Args('wallet')
-    updateWalletInput: UpdateWalletInput,
+    @Args('productId', { type: () => Number }) productId: number,
   ) {
-    return this.usersService.updateWalletBalance(email, updateWalletInput);
+    return this.usersService.purchase(email, productId);
   }
 
-  @Query(() => User, { name: 'user' })
-  findOne(@Args('email', { type: () => String }) email: string) {
-    return this.usersService.findOne(email);
-  }
+  // @Mutation(() => User)
+  // topUp(
+  //   @Args('email', { type: () => String }) email: string,
+  //   @Args('amount', { type: () => Number }) amount: number,
+  // ) {
+  //   return this.usersService.topUp(email, amount);
+  // }
+
+  // @Query(() => User, { name: 'user' })
+  // findOne(@Args('email', { type: () => String }) email: string) {
+  //   return this.usersService.findOne(email);
+  // }
 
   @Mutation(() => User)
   updateUser(
@@ -58,6 +66,15 @@ export class UsersResolver {
     @Args('user') updateUserInput: UpdateUserInput,
   ) {
     return this.usersService.update(email, updateUserInput);
+  }
+
+  @Mutation(() => User)
+  // @UseGuards(JwtAuthGuard)
+  deactivate(
+    @Args('email', { type: () => String }) email: string,
+    @Args('status') deactivateUserInput: DeactivateUserInput,
+  ) {
+    return this.usersService.deactivate(email, deactivateUserInput);
   }
 
   @Mutation(() => User)

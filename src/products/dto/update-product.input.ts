@@ -6,12 +6,12 @@ import { InputType, Field, Int, PartialType } from '@nestjs/graphql';
 export class UpdateProductInput extends PartialType(CreateProductInput) {
   @IsString()
   @IsOptional()
-  @Field({ nullable: true })
-  name: string;
+  @Field()
+  title: string;
 
   @IsNumber()
   @IsOptional()
-  @Field({ nullable: true })
+  @Field()
   price: number;
 
   @IsString()

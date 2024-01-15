@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
@@ -10,7 +12,11 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
-import { UpdateWalletInput } from './dto/update-wallet.input';
+import { DeactivateUserInput } from './dto/deactivate-user.input';
+// import { UpdateWalletInput } from './dto/update-wallet.input';
+// import { Product } from 'src/products/entities/product.entity';
+// import { Order } from 'src/orders/entities/order.entity';
+// import { ProductsService } from 'src/products/products.service';
 
 const scrypt = promisify(_scrypt);
 
@@ -92,6 +98,31 @@ export class UsersService {
     return updatedUser;
   }
 
+  async deactivate(
+    email: string,
+    deactivateUserInput: DeactivateUserInput,
+  ): Promise<User> {
+    const userToDeactivate = await this.usersRepository.findOne({
+      where: { email },
+    });
+
+    if (!userToDeactivate) {
+      throw new NotFoundException('No user found');
+    }
+
+    if (!userToDeactivate.isActive) {
+      throw new NotFoundException('User already deactivated');
+    }
+
+    await this.usersRepository.update(userToDeactivate.id, deactivateUserInput);
+
+    const deactivatedUser = await this.usersRepository.findOneOrFail({
+      where: { id: userToDeactivate.id },
+    });
+
+    return deactivatedUser;
+  }
+
   async remove(email: string): Promise<User | null> {
     const userToRemove = await this.usersRepository.findOne({
       where: { email },
@@ -118,9 +149,31 @@ export class UsersService {
     return { walletBalance: user.walletBalance || 0 };
   }
 
-  async updateWalletBalance(
+  // async topUp(email: string, additionalCredits: number): Promise<any | null> {
+  //   const userWalletToUpdate = await this.usersRepository.findOne({
+  //     where: { email },
+  //   });
+
+  //   if (additionalCredits < 0) {
+  //     throw new BadRequestException('Invalid Amount');
+  //   }
+
+  //   const totalCredits = userWalletToUpdate.walletBalance + additionalCredits;
+
+  //   await this.usersRepository.update(userWalletToUpdate.id, {
+  //     walletBalance: totalCredits,
+  //   });
+
+  //   const updatedWallet = await this.usersRepository.findOneOrFail({
+  //     where: { id: userWalletToUpdate.id },
+  //   });
+
+  //   return updatedWallet;
+  // }
+
+  async purchase(
     email: string,
-    updateWalletInput: UpdateWalletInput,
+    id: number,
   ): Promise<{ walletBalance: number } | null> {
     const userWalletToUpdate = await this.usersRepository.findOne({
       where: { email },
@@ -130,7 +183,21 @@ export class UsersService {
       throw new NotFoundException('No user found');
     }
 
-    await this.usersRepository.update(userWalletToUpdate.id, updateWalletInput);
+    // const product = await this.productsService.findOne(id);
+    // if (!product) {
+    //   throw new NotFoundException('No product found');
+    // }
+
+    // const remainingBalance = userWalletToUpdate.walletBalance - product.price;
+    const remainingBalance = userWalletToUpdate.walletBalance - 500;
+
+    if (remainingBalance < 0) {
+      throw new BadRequestException('Insufficient Credits');
+    }
+
+    await this.usersRepository.update(userWalletToUpdate.id, {
+      walletBalance: remainingBalance,
+    });
 
     const updatedWallet = await this.usersRepository.findOneOrFail({
       where: { id: userWalletToUpdate.id },

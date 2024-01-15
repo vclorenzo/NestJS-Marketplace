@@ -28,7 +28,7 @@ export class Order {
   @Field((type) => Int)
   productId: number;
 
-  @OneToMany(() => Product, (product) => product.order)
-  @Field((type) => Product)
-  products?: Product[];
+  // @OneToMany(() => Product, (product) => product.order)
+  // @Field((type) => Product)
+  // products?: Product[];
 }

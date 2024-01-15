@@ -25,6 +25,9 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    if (!user.isActive) {
+      throw new BadRequestException('User suspended');
+    }
     const { password: hashedPassword, ...result } = user;
 
     // Decrypt and compare passwords
