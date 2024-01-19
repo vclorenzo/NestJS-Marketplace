@@ -124,6 +124,7 @@ export class ProductsService {
 
     return updatedProduct;
   }
+
   async delist(
     id: number,
     delistProductInput: DelistProductInput,

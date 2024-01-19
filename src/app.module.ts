@@ -8,7 +8,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
-import { OrdersModule } from './orders/orders.module';
 import { CommentsModule } from './comments/comments.module';
 import { CartModule } from './cart/cart.module';
 import { AuthModule } from './auth/auth.module';
@@ -29,10 +28,10 @@ import { AuthModule } from './auth/auth.module';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), '../schema.gql'),
       sortSchema: true,
+      context: ({ req }) => ({ req }),
     }),
-    ProductsModule,
     UsersModule,
-    OrdersModule,
+    ProductsModule,
     CommentsModule,
     CartModule,
     AuthModule,

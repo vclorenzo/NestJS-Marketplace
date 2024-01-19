@@ -12,16 +12,25 @@ import { Product } from './entities/product.entity';
 import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
 import {
+  BadRequestException,
+  ForbiddenException,
   InternalServerErrorException,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { User } from 'src/users/entities/user.entity';
 import { Comment } from 'src/comments/entities/comment.entity';
 import { DelistProductInput } from './dto/delist-product.input';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/users/decorator/user.decorator';
+import { UsersService } from 'src/users/users.service';
 
 @Resolver(() => Product)
 export class ProductsResolver {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Mutation(() => Product)
   createProduct(
@@ -80,10 +89,37 @@ export class ProductsResolver {
   }
 
   @Mutation(() => Product)
+  @UseGuards(JwtAuthGuard)
   delist(
     @Args('id') id: number,
+    @Args('email') email: string,
     @Args('status') delistProductInput: DelistProductInput,
+    @CurrentUser() user: User,
   ) {
+    if (user.email !== email) {
+      throw new BadRequestException(
+        'You are not authorized to delist this product',
+      );
+    }
+    return this.productsService.delist(id, delistProductInput);
+  }
+  @Mutation(() => Product)
+  @UseGuards(JwtAuthGuard)
+  async adminDelist(
+    @Args('id') id: number,
+    @Args('adminEmail') adminEmail: string,
+    @Args('status') delistProductInput: DelistProductInput,
+    @CurrentUser() user: User,
+  ) {
+    const activeUser = await this.usersService.findOne(user.email);
+    if (adminEmail !== activeUser.email) {
+      throw new ForbiddenException('Permission denied. Invalid admin email.');
+    }
+    if (!activeUser.isAdmin) {
+      throw new ForbiddenException(
+        'Permission denied. Only admins can remove users.',
+      );
+    }
     return this.productsService.delist(id, delistProductInput);
   }
 

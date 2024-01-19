@@ -51,11 +51,11 @@ export class User {
   @Field()
   isActive: boolean;
 
-  @OneToMany(() => Product, (product) => product.user)
+  @OneToMany(() => Product, (product) => product.user, { cascade: true })
   @Field((type) => [Product], { nullable: true })
   products?: Product[];
 
-  @OneToMany(() => Comment, (comment) => comment.user)
+  @OneToMany(() => Comment, (comment) => comment.user, { cascade: true })
   @Field((type) => [Comment], { nullable: true })
   comments?: Comment[];
 }

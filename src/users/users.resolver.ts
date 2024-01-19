@@ -3,14 +3,21 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
-import { NotFoundException, UseGuards } from '@nestjs/common';
+import {
+  ForbiddenException,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
-import { UpdateWalletInput } from './dto/update-wallet.input';
-import { DeactivateUserInput } from './dto/deactivate-user.input';
+import { CurrentUser } from '../users/decorator/user.decorator';
+import { ProductsService } from 'src/products/products.service';
 
 @Resolver(() => User)
 export class UsersResolver {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    // private readonly productsService: ProductsService,
+  ) {}
 
   @Mutation(() => User)
   createUser(
@@ -24,40 +31,57 @@ export class UsersResolver {
     return this.usersService.findAll();
   }
 
+  @Query((returns) => User)
+  @UseGuards(JwtAuthGuard)
+  whoAmI(@CurrentUser() user: User) {
+    if (user.isAdmin === true) {
+      throw new ForbiddenException(
+        'Permission denied. Only admins can remove users.',
+      );
+    }
+    return this.usersService.findOne(user.email);
+  }
+
   @Query(() => User, { name: 'walletBalance' })
   @UseGuards(JwtAuthGuard)
   getWalletBalance(
     @Args('email', { type: () => String }) email: string,
-    @Context() context: any,
+    @CurrentUser() user: User,
   ) {
-    if (context.email !== email) {
-      throw new NotFoundException(
+    if (user.email !== email) {
+      throw new ForbiddenException(
         'You are not authorized to view this wallet balance',
       );
     }
     return this.usersService.getWalletBalance(email);
   }
 
-  @Mutation(() => User)
-  // @UseGuards(JwtAuthGuard)
-  purchase(
-    @Args('email', { type: () => String }) email: string,
-    @Args('productId', { type: () => Number }) productId: number,
-  ) {
-    return this.usersService.purchase(email, productId);
-  }
-
   // @Mutation(() => User)
-  // topUp(
+  // // @UseGuards(JwtAuthGuard)
+  // async purchase(
   //   @Args('email', { type: () => String }) email: string,
-  //   @Args('amount', { type: () => Number }) amount: number,
+  //   @Args('productId', { type: () => Number }) productId: number,
   // ) {
-  //   return this.usersService.topUp(email, amount);
-  // }
+  //   //Find product
+  //   const product = await this.productsService.findOne(productId);
 
-  // @Query(() => User, { name: 'user' })
-  // findOne(@Args('email', { type: () => String }) email: string) {
-  //   return this.usersService.findOne(email);
+  //   // check walletbalance
+  //   const user = await this.usersService.findOne(email);
+
+  //   // Check if product price <= walletbalance
+  //   const amount = product.price;
+  //   const credits = user.walletBalance;
+  //   if (amount > credits) {
+  //     return;
+  //   }
+
+  //   const remainingBalance = credits - amount;
+
+  //   // update price from wallet ballance
+
+  //   return this.usersService.purchase(email, {
+  //     walletBalance: remainingBalance,
+  //   });
   // }
 
   @Mutation(() => User)
@@ -69,18 +93,21 @@ export class UsersResolver {
   }
 
   @Mutation(() => User)
-  // @UseGuards(JwtAuthGuard)
-  deactivate(
-    @Args('email', { type: () => String }) email: string,
-    @Args('status') deactivateUserInput: DeactivateUserInput,
-  ) {
-    return this.usersService.deactivate(email, deactivateUserInput);
-  }
-
-  @Mutation(() => User)
+  @UseGuards(JwtAuthGuard)
   async removeUser(
+    @Args('adminEmail', { type: () => String }) adminEmail: string,
     @Args('email', { type: () => String }) email: string,
+    @CurrentUser() user: User,
   ): Promise<User | null> {
+    const activeUser = await this.usersService.findOne(user.email);
+    if (adminEmail !== activeUser.email) {
+      throw new ForbiddenException('Permission denied. Invalid admin email.');
+    }
+    if (!activeUser.isAdmin) {
+      throw new ForbiddenException(
+        'Permission denied. Only admins can remove users.',
+      );
+    }
     const removedUser = await this.usersService.remove(email);
 
     if (!removedUser) {

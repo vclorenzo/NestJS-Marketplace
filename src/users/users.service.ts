@@ -13,10 +13,7 @@ import { Repository } from 'typeorm';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 import { DeactivateUserInput } from './dto/deactivate-user.input';
-// import { UpdateWalletInput } from './dto/update-wallet.input';
-// import { Product } from 'src/products/entities/product.entity';
-// import { Order } from 'src/orders/entities/order.entity';
-// import { ProductsService } from 'src/products/products.service';
+import { UpdateWalletInput } from './dto/update-wallet.input';
 
 const scrypt = promisify(_scrypt);
 
@@ -98,31 +95,6 @@ export class UsersService {
     return updatedUser;
   }
 
-  async deactivate(
-    email: string,
-    deactivateUserInput: DeactivateUserInput,
-  ): Promise<User> {
-    const userToDeactivate = await this.usersRepository.findOne({
-      where: { email },
-    });
-
-    if (!userToDeactivate) {
-      throw new NotFoundException('No user found');
-    }
-
-    if (!userToDeactivate.isActive) {
-      throw new NotFoundException('User already deactivated');
-    }
-
-    await this.usersRepository.update(userToDeactivate.id, deactivateUserInput);
-
-    const deactivatedUser = await this.usersRepository.findOneOrFail({
-      where: { id: userToDeactivate.id },
-    });
-
-    return deactivatedUser;
-  }
-
   async remove(email: string): Promise<User | null> {
     const userToRemove = await this.usersRepository.findOne({
       where: { email },
@@ -149,60 +121,24 @@ export class UsersService {
     return { walletBalance: user.walletBalance || 0 };
   }
 
-  // async topUp(email: string, additionalCredits: number): Promise<any | null> {
-  //   const userWalletToUpdate = await this.usersRepository.findOne({
-  //     where: { email },
-  //   });
-
-  //   if (additionalCredits < 0) {
-  //     throw new BadRequestException('Invalid Amount');
-  //   }
-
-  //   const totalCredits = userWalletToUpdate.walletBalance + additionalCredits;
-
-  //   await this.usersRepository.update(userWalletToUpdate.id, {
-  //     walletBalance: totalCredits,
-  //   });
-
-  //   const updatedWallet = await this.usersRepository.findOneOrFail({
-  //     where: { id: userWalletToUpdate.id },
-  //   });
-
-  //   return updatedWallet;
-  // }
-
   async purchase(
     email: string,
-    id: number,
-  ): Promise<{ walletBalance: number } | null> {
-    const userWalletToUpdate = await this.usersRepository.findOne({
+    updateWalletInput: UpdateWalletInput,
+  ): Promise<User> {
+    const userToUpdate = await this.usersRepository.findOne({
       where: { email },
     });
 
-    if (!userWalletToUpdate) {
+    if (!userToUpdate) {
       throw new NotFoundException('No user found');
     }
 
-    // const product = await this.productsService.findOne(id);
-    // if (!product) {
-    //   throw new NotFoundException('No product found');
-    // }
+    await this.usersRepository.update(userToUpdate.id, updateWalletInput);
 
-    // const remainingBalance = userWalletToUpdate.walletBalance - product.price;
-    const remainingBalance = userWalletToUpdate.walletBalance - 500;
-
-    if (remainingBalance < 0) {
-      throw new BadRequestException('Insufficient Credits');
-    }
-
-    await this.usersRepository.update(userWalletToUpdate.id, {
-      walletBalance: remainingBalance,
+    const updatedUser = await this.usersRepository.findOneOrFail({
+      where: { id: userToUpdate.id },
     });
 
-    const updatedWallet = await this.usersRepository.findOneOrFail({
-      where: { id: userWalletToUpdate.id },
-    });
-
-    return updatedWallet;
+    return updatedUser;
   }
 }
