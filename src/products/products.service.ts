@@ -10,8 +10,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
-import { CommentsService } from 'src/comments/comments.service';
-import { Comment } from 'src/comments/entities/comment.entity';
 import { DelistProductInput } from './dto/delist-product.input';
 
 @Injectable()
@@ -86,6 +84,7 @@ export class ProductsService {
   async findOne(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({
       where: { id },
+      relations: ['comments'],
     });
     if (!product) {
       throw new NotFoundException('No product found');

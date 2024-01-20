@@ -7,25 +7,25 @@ export class UpdateProductInput extends PartialType(CreateProductInput) {
   @IsString()
   @IsOptional()
   @Field()
-  title: string;
+  title?: string;
 
   @IsNumber()
   @IsOptional()
   @Field()
-  price: number;
+  price?: number;
 
   @IsString()
   @IsOptional()
   @Field({ nullable: true })
-  image: string;
+  image?: string;
 
   @IsString()
   @IsOptional()
   @Field({ nullable: true })
-  description: string;
+  description?: string;
 
   @IsString()
   @IsOptional()
   @Field({ nullable: true })
-  category: string;
+  category?: string;
 }

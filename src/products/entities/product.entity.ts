@@ -54,6 +54,6 @@ export class Product {
   user: User;
 
   @OneToMany(() => Comment, (comment) => comment.product, { cascade: true })
-  @Field((type) => Comment)
+  @Field((type) => [Comment], { nullable: true })
   comments?: Comment[];
 }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CommentsResolver } from './comments.resolver';
 import { TypeOrmModule } from '@nestjs/typeorm';

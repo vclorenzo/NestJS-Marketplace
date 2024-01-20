@@ -9,7 +9,6 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { CommentsModule } from './comments/comments.module';
-import { CartModule } from './cart/cart.module';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
@@ -33,7 +32,6 @@ import { AuthModule } from './auth/auth.module';
     UsersModule,
     ProductsModule,
     CommentsModule,
-    CartModule,
     AuthModule,
   ],
   controllers: [AppController],

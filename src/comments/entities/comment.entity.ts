@@ -26,7 +26,11 @@ export class Comment {
   @Field((type) => Int)
   userId: number;
 
-  @ManyToOne(() => User, (user) => user.comments)
+  @ManyToOne(() => User, (user) => user.comments, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'userId' })
   @Field((type) => User)
   user: User;
 

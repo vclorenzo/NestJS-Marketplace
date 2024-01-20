@@ -4,6 +4,7 @@ import { User } from './entities/user.entity';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import {
+  BadRequestException,
   ForbiddenException,
   NotFoundException,
   UseGuards,
@@ -16,7 +17,7 @@ import { ProductsService } from 'src/products/products.service';
 export class UsersResolver {
   constructor(
     private readonly usersService: UsersService,
-    // private readonly productsService: ProductsService,
+    private readonly productsService: ProductsService,
   ) {}
 
   @Mutation(() => User)
@@ -29,6 +30,10 @@ export class UsersResolver {
   @Query(() => [User], { name: 'users' })
   findAll() {
     return this.usersService.findAll();
+  }
+  @Query(() => User, { name: 'user' })
+  findOne(@Args('email', { type: () => String }) email: string) {
+    return this.usersService.findOne(email);
   }
 
   @Query((returns) => User)
@@ -56,33 +61,55 @@ export class UsersResolver {
     return this.usersService.getWalletBalance(email);
   }
 
-  // @Mutation(() => User)
-  // // @UseGuards(JwtAuthGuard)
-  // async purchase(
-  //   @Args('email', { type: () => String }) email: string,
-  //   @Args('productId', { type: () => Number }) productId: number,
-  // ) {
-  //   //Find product
-  //   const product = await this.productsService.findOne(productId);
+  @Mutation(() => User)
+  // @UseGuards(JwtAuthGuard)
+  async purchase(
+    @Args('email', { type: () => String }) email: string,
+    @Args('productId', { type: () => Number }) productId: number,
+  ) {
+    //Find product
+    const product = await this.productsService.findOne(productId);
 
-  //   // check walletbalance
-  //   const user = await this.usersService.findOne(email);
+    // check walletbalance
+    const user = await this.usersService.findOne(email);
 
-  //   // Check if product price <= walletbalance
-  //   const amount = product.price;
-  //   const credits = user.walletBalance;
-  //   if (amount > credits) {
-  //     return;
-  //   }
+    const { id: prodId, price, userId: prodUserId, isListed } = product;
+    const { id: userId, walletBalance } = user;
 
-  //   const remainingBalance = credits - amount;
+    // Check if buyer is same as owner
+    if (prodUserId === userId) {
+      throw new BadRequestException('Product already owned');
+    }
 
-  //   // update price from wallet ballance
+    // Check if product is available
+    if (!isListed) {
+      throw new BadRequestException('Product is unavailable');
+    }
 
-  //   return this.usersService.purchase(email, {
-  //     walletBalance: remainingBalance,
-  //   });
-  // }
+    if (price > walletBalance) {
+      // Check if product price <= walletbalance
+      throw new BadRequestException('Insufficient balance');
+    }
+
+    const remainingBalance = walletBalance - price;
+
+    //update userID from product
+    this.productsService.update(prodId, { userId: userId });
+
+    const seller = await this.usersService.findOneID(prodUserId);
+
+    const profit = seller.walletBalance + price;
+
+    //update wallet of seller
+    this.usersService.purchase(seller.email, {
+      walletBalance: profit,
+    });
+
+    // update price from wallet ballance and  return
+    return this.usersService.purchase(email, {
+      walletBalance: remainingBalance,
+    });
+  }
 
   @Mutation(() => User)
   updateUser(
