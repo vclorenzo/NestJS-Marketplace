@@ -12,6 +12,7 @@ import {
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { CurrentUser } from '../users/decorator/user.decorator';
 import { ProductsService } from 'src/products/products.service';
+import { DeactivateUserInput } from './dto/deactivate-user.input';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -121,10 +122,12 @@ export class UsersResolver {
 
   @Mutation(() => User)
   @UseGuards(JwtAuthGuard)
-  async removeUser(
-    @Args('adminEmail', { type: () => String }) adminEmail: string,
-    @Args('email', { type: () => String }) email: string,
-    @CurrentUser() user: User,
+  async adminUpdateUserStatus(
+    @Args('adminEmail') adminEmail: string,
+    @Args('userEmail') userEmail: string,
+    @Args('status') deactivateUserInput: DeactivateUserInput,
+    @CurrentUser()
+    user: User,
   ): Promise<User | null> {
     const activeUser = await this.usersService.findOne(user.email);
     if (adminEmail !== activeUser.email) {
@@ -135,12 +138,14 @@ export class UsersResolver {
         'Permission denied. Only admins can remove users.',
       );
     }
-    const removedUser = await this.usersService.remove(email);
+    const removedUser = await this.usersService.suspend(
+      userEmail,
+      deactivateUserInput,
+    );
 
     if (!removedUser) {
       throw new NotFoundException('No user found');
     }
-
     return removedUser;
   }
 }

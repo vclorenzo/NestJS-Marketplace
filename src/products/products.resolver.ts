@@ -24,6 +24,7 @@ import { DelistProductInput } from './dto/delist-product.input';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/users/decorator/user.decorator';
 import { UsersService } from 'src/users/users.service';
+import { SearchProductInput } from './dto/search-product.input';
 
 @Resolver(() => Product)
 export class ProductsResolver {
@@ -45,34 +46,30 @@ export class ProductsResolver {
   }
 
   @Query(() => [Product], { name: 'products' })
-  async searchAndPaginate(
-    @Args('page') page: number,
-    @Args('pageSize') pageSize: number,
-    @Args('minPrice') minPrice: number,
-    @Args('maxPrice') maxPrice: number,
-    @Args('title') title: string,
-    @Args('category') category: string,
-    @Args('description') description: string,
+  async search(
+    // @Args('page') page: number,
+    // @Args('pageSize') pageSize: number,
+    @Args('limit', { type: () => Int }) limit: number,
+    @Args('page', { type: () => Int }) page: number,
+    @Args('searchInput') searchInput: SearchProductInput,
   ) {
-    try {
-      const result = await this.productsService.searchAndPaginate(
-        pageSize,
-        page,
-        minPrice,
-        maxPrice,
-        title,
-        description,
-        category,
-      );
+    const result = await this.productsService.search(searchInput, limit, page);
 
-      if (!result.products || result.products.length === 0) {
-        throw new NotFoundException('No products found');
-      }
-      return result.products;
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Internal Server Error');
+    if (!result || result.length === 0) {
+      throw new NotFoundException('No products found');
     }
+    return result;
+  }
+
+  @Query(() => [Product], { name: 'FindProducts' })
+  async findProducts(
+    @Args('searchInput') searchInput: SearchProductInput,
+  ): Promise<Product[]> {
+    const result = await this.productsService.findAll(searchInput);
+
+    // console.log(result, searchInput);
+
+    return result;
   }
 
   @Query(() => Product, { name: 'product' })
@@ -103,6 +100,7 @@ export class ProductsResolver {
     }
     return this.productsService.delist(id, delistProductInput);
   }
+
   @Mutation(() => Product)
   @UseGuards(JwtAuthGuard)
   async adminDelist(

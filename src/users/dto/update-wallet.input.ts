@@ -1,12 +1,4 @@
-import {
-  IsEmail,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsDate,
-  IsNumber,
-  IsBoolean,
-} from 'class-validator';
+import { IsNumber } from 'class-validator';
 import { CreateUserInput } from './create-user.input';
 import { InputType, Field, PartialType } from '@nestjs/graphql';
 

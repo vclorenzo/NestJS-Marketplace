@@ -31,33 +31,21 @@ export class CommentsService {
   }
 
   async findAll(
-    pageSize: number = 10,
+    limit: number = 10,
     page: number = 1,
   ): Promise<{
     comments: Comment[];
-    total: number;
-    limit: number;
-    offset: number;
-    page: number;
-    totalPages: number;
   }> {
-    const skip = (page - 1) * pageSize;
-    const take = pageSize;
+    const skip = (page - 1) * limit;
+    const take = limit;
 
     const [comments, total] = await this.commentsRepository.findAndCount({
       skip,
       take,
     });
 
-    const totalPages = Math.ceil(total / pageSize);
-
     return {
       comments,
-      total,
-      limit: pageSize,
-      offset: skip,
-      page,
-      totalPages,
     };
   }
 

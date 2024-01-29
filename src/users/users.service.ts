@@ -54,7 +54,7 @@ export class UsersService {
       where: { email },
       relations: ['products', 'comments'],
     });
-    if (!user) {
+    if (!user || !user.isActive) {
       throw new NotFoundException('No user found');
     }
     return user;
@@ -64,7 +64,7 @@ export class UsersService {
     const user = await this.usersRepository.findOne({
       where: { id },
     });
-    if (!user) {
+    if (!user || !user.isActive) {
       throw new NotFoundException('No user found');
     }
     return user;
@@ -77,6 +77,20 @@ export class UsersService {
 
     if (!userToUpdate) {
       throw new NotFoundException('No user found');
+    }
+
+    if (!userToUpdate.isActive) {
+      throw new NotFoundException('User inactive');
+    }
+
+    if (updateUserInput.email) {
+      const emailCheck = await this.usersRepository.findOne({
+        where: { email: updateUserInput.email },
+      });
+
+      if (emailCheck && emailCheck.id !== userToUpdate.id) {
+        throw new BadRequestException('Email already exists');
+      }
     }
 
     // Check if the password is provided in the update input
@@ -96,7 +110,10 @@ export class UsersService {
     return updatedUser;
   }
 
-  async remove(email: string): Promise<User | null> {
+  async suspend(
+    email: string,
+    deactivateUserInput: DeactivateUserInput,
+  ): Promise<User | null> {
     const userToRemove = await this.usersRepository.findOne({
       where: { email },
     });
@@ -105,8 +122,12 @@ export class UsersService {
       throw new NotFoundException('No user found');
     }
 
-    await this.usersRepository.remove(userToRemove);
-    return userToRemove;
+    await this.usersRepository.update(userToRemove.id, deactivateUserInput);
+
+    const deactivatedAccount = await this.usersRepository.findOneOrFail({
+      where: { id: userToRemove.id },
+    });
+    return deactivatedAccount;
   }
 
   async getWalletBalance(
@@ -116,7 +137,7 @@ export class UsersService {
       where: { email },
     });
 
-    if (!user) {
+    if (!user || !user.isActive) {
       throw new NotFoundException('No user found');
     }
     return { walletBalance: user.walletBalance || 0 };
@@ -130,7 +151,7 @@ export class UsersService {
       where: { email },
     });
 
-    if (!userToUpdate) {
+    if (!userToUpdate || !userToUpdate.isActive) {
       throw new NotFoundException('No user found');
     }
 

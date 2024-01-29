@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 import { DelistProductInput } from './dto/delist-product.input';
+import { SearchProductInput } from './dto/search-product.input';
 
 @Injectable()
 export class ProductsService {
@@ -25,60 +26,72 @@ export class ProductsService {
     return this.productsRepository.save(newProduct);
   }
 
-  async searchAndPaginate(
-    pageSize: number = 10,
+  async search(
+    searchInput: SearchProductInput,
+    limit: number = 10,
     page: number = 1,
-    minPrice: number,
-    maxPrice: number,
-    title: string,
-    description: string,
-    category: string,
-  ): Promise<{
-    products: Product[];
-    total: number;
-    limit: number;
-    offset: number;
-    page: number;
-    totalPages: number;
-  }> {
-    try {
-      const skip = (page - 1) * pageSize;
-      const take = pageSize;
+  ): Promise<Product[]> {
+    const { minPrice, maxPrice, title, description, category } = searchInput;
 
-      const result = this.productsRepository
-        .createQueryBuilder('product')
-        .select(['title', 'price', 'description', 'category'])
-        .where('price BETWEEN :minPrice AND :maxPrice', {
-          minPrice: minPrice,
-          maxPrice: maxPrice,
-        })
-        .andWhere('title LIKE :title', { title: `3DS` })
-        .andWhere('description LIKE :description', {
-          description: `TEST`,
-        })
-        .andWhere('category LIKE :category', { category: `gaming` });
-      // .andWhere('isListed IS TRUE');
+    const queryBuilder = this.productsRepository
+      .createQueryBuilder('product')
+      .select([
+        'product.id',
+        'product.price',
+        'product.title',
+        'product.image',
+        'product.description',
+        'product.category',
+        'product.isListed',
+        'product.userId',
+      ])
+      .addSelect(['comment.id', 'comment.comment', 'comment.userId'])
+      .leftJoinAndSelect('product.comments', 'comment')
+      .where('product.isListed IS TRUE')
+      .andWhere('price BETWEEN :minPrice AND :maxPrice', {
+        minPrice,
+        maxPrice,
+      })
+      .andWhere('title LIKE :title', { title: `%${title}%` })
+      .andWhere('description LIKE :description', {
+        description: `%${description}%`,
+      })
+      .andWhere('category LIKE :category', {
+        category: `%${category}%`,
+      })
+      .orderBy('product.id', 'ASC');
 
-      console.log(result);
+    console.log(queryBuilder.getSql());
 
-      const [products, total] = await result
-        .skip(skip)
-        .take(take)
-        .getManyAndCount();
+    const total = await queryBuilder.getCount();
+    const totalPages = Math.ceil(total / limit);
+    const pageOffset = (total / totalPages) * (page - 1);
 
-      const totalPages = Math.ceil(total / pageSize);
-      return {
-        products,
-        total,
-        limit: pageSize,
-        offset: skip,
-        page,
-        totalPages,
-      };
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException();
-    }
+    const products = await queryBuilder.skip(pageOffset).take(limit).getMany();
+
+    return products;
+  }
+
+  async findAll(searchInput: SearchProductInput): Promise<Product[]> {
+    const { minPrice, maxPrice, title, description, category } = searchInput;
+
+    const queryBuilder = this.productsRepository
+      .createQueryBuilder('product')
+      .select('*')
+      .where('product.isListed IS TRUE')
+      .andWhere('price BETWEEN :minPrice AND :maxPrice', {
+        minPrice,
+        maxPrice,
+      })
+      .andWhere('title LIKE :title', { title: `%${title}%` })
+      .andWhere('description LIKE :description', {
+        description: `%${description}%`,
+      })
+      .andWhere('category LIKE :category', {
+        category: `%${category}%`,
+      });
+
+    return await queryBuilder.getRawMany();
   }
 
   async findOne(id: number): Promise<Product> {
@@ -94,7 +107,7 @@ export class ProductsService {
 
   async getUser(id: number): Promise<User> {
     const user = await this.usersService.findOneID(id);
-    if (!user) {
+    if (!user || !user.isActive) {
       throw new NotFoundException('No user found');
     }
     return user;

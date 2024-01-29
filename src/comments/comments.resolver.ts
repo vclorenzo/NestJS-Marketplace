@@ -15,9 +15,13 @@ import { User } from 'src/users/entities/user.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { NotFoundError } from 'rxjs';
 import {
+  UseGuards,
+  BadRequestException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { CurrentUser } from 'src/users/decorator/user.decorator';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 @Resolver(() => Comment)
 export class CommentsResolver {
@@ -30,13 +34,10 @@ export class CommentsResolver {
     return this.commentsService.create(createCommentInput);
   }
 
-  @Query(() => [Comment], { name: 'comments' })
-  async getComments(
-    @Args('page') page: number,
-    @Args('pageSize') pageSize: number,
-  ) {
+  @Query(() => [Comment])
+  async getComments(@Args('page') page: number, @Args('limit') limit: number) {
     try {
-      const result = await this.commentsService.findAll(pageSize, page);
+      const result = await this.commentsService.findAll(limit, page);
 
       if (!result.comments || result.comments.length === 0) {
         throw new NotFoundException('No comments found');
@@ -54,15 +55,33 @@ export class CommentsResolver {
   }
 
   @Mutation(() => Comment)
+  @UseGuards(JwtAuthGuard)
   updateComment(
     @Args('id') id: number,
     @Args('comment') updateCommentInput: UpdateCommentInput,
+    @Args('email') email: string,
+    @CurrentUser() user: User,
   ) {
+    if (user.email !== email) {
+      throw new BadRequestException(
+        'You are unauthorized to update this comment',
+      );
+    }
     return this.commentsService.update(id, updateCommentInput);
   }
 
   @Mutation(() => Comment)
-  removeComment(@Args('id', { type: () => Int }) id: number) {
+  @UseGuards(JwtAuthGuard)
+  removeComment(
+    @Args('id', { type: () => Int }) id: number,
+    @Args('email') email: string,
+    @CurrentUser() user: User,
+  ) {
+    if (user.email !== email) {
+      throw new BadRequestException(
+        'You are unauthorized to update this comment',
+      );
+    }
     return this.commentsService.remove(id);
   }
 
